@@ -101,5 +101,5 @@ ENV/
 .mypy_cache/
 
 # pickled files
-.p
-.pic
+*.p
+*.pic
