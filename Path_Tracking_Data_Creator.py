@@ -11,7 +11,7 @@ def main(n):
 	P = tr.Predictor
 	# preds = [p for p in pybertini.tracking.Predictor]
 	# took the Heun and P.RKNorsett34 predictors out
-	# omit constant because it is slow
+	# omit Constant because it is slow
 	preds = [P.Euler, P.HeunEuler, P.RK4, P.RKCashKarp45, P.RKDormandPrince56, P.RKF45, P.RKVerner67]
 	data_set = create_data(tols, preds)
 	pickle.dump(data_set, open('data_set.p','wb'))
@@ -23,6 +23,7 @@ def create_data(tracking_tolerances, predictors):
 	for t in tracking_tolerances:
 		for p in predictors:
 			print('{} {}'.format(t, p))
+			#str(t) use this if tk load fails
 			runtime, successcode = compute_values(t, p)
 			array_of_data_sets[i] = (t, p, runtime, successcode)
 			i += 1
