@@ -6,6 +6,18 @@ import sys
 import time
 
 def main(n):
+<<<<<<< HEAD
+	tols = 10 ** (np.linspace(-2, -10, n))
+	import pybertini.tracking as tr
+	P = tr.Predictor
+	# preds = [p for p in pybertini.tracking.Predictor]
+	# took the Heun and P.RKNorsett34 predictors out
+	# omit Constant because it is slow
+	preds = [P.Euler, P.HeunEuler, P.RK4, P.RKCashKarp45, P.RKDormandPrince56, P.RKF45, P.RKVerner67]
+	data_set = create_data(tols, preds)
+	pickle.dump(data_set, open('data_set.p','wb'))
+
+=======
     tols = 10 ** (np.linspace(-2, -10, n))
     import pybertini.tracking as tr
     P = tr.Predictor
@@ -20,16 +32,29 @@ def main(n):
 # Creates the data
 # data is formatted as a tuple with 
 # the tracking tolerance, predictor, runtime, and success code
+>>>>>>> 9c3b93bcd107d6976b325a3e9961c6529d473c09
 def create_data(tracking_tolerances, predictors):
     array_of_data_sets = np.ndarray(len(tracking_tolerances) * len(predictors), dtype=np.object)
     i = 0
 
+<<<<<<< HEAD
+	array_of_data_sets = np.ndarray(len(tracking_tolerances) * len(predictors), dtype=np.object)
+	i = 0
+	for t in tracking_tolerances:
+		for p in predictors:
+			print('{} {}'.format(t, p))
+			#str(t) use this if tk load fails
+			runtime, successcode = compute_values(t, p)
+			array_of_data_sets[i] = (t, p, runtime, successcode)
+			i += 1
+=======
     for t in tracking_tolerances:
         for p in predictors:
             print('{} {}'.format(t, p))
             runtime, successcode = compute_values(t, p)
             array_of_data_sets[i] = (t, p, runtime, successcode)
             i += 1
+>>>>>>> 9c3b93bcd107d6976b325a3e9961c6529d473c09
 
     return array_of_data_sets
 
