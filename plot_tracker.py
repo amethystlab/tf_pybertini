@@ -4,12 +4,13 @@ import math
 import matplotlib.pyplot as plt
 import numpy as np
 
-
-path_information = pickle.load(open("data_set.p", "rb"))
-n = 3 # number of times run / number of points for each tracker
+path_information = pickle.load(open("data_set_10.p", "rb"))
+n = 0
 # scatter plot
 #use diff color for each predictor
 #log tol (xaxis) vs log time (yaxis)
+
+print_logs_times = True
 
 fig, ax = plt.subplots()
 trackers = np.zeros(shape=(path_information.shape[0], 1))
@@ -28,63 +29,77 @@ predictor6y = np.zeros(n)
 predictor7x = np.zeros(n)
 predictor7y = np.zeros(n)
 
+fails_x = np.zeros(n)
+fails_y = np.zeros(n)
+
 # compute the data
 for ii in range(path_information.shape[0]):
 	thing = path_information[ii]
 	trackers[ii] = thing[1]
 	row = path_information[ii]
-	x = math.log10(row[0]) * -1
-	y = math.log10(row[2]) * -1
 
-	#if ii < 7:
+	# x = tolerance
+	x = math.log10(row[0]) * -1
+	# y = track time
+	if (print_logs_times):
+		y = math.log10(row[2])
+	else:
+		y = row[2]
+
+	# true if success
+	z = row[3] == 0
+
+	if not z:
+		fails_x = np.append(fails_x,x)
+		fails_y = np.append(fails_y,y)
+
 	if trackers[ii] == [1.]:
 		predictor1x = np.append(predictor1x, x)
 		predictor1y = np.append(predictor1y, y)
-		#plt.scatter(x, y, marker = 'D', c = 'red', label = 'Euler')
+
 	elif trackers[ii] == [4.]:
 		predictor2x = np.append(predictor2x, x)
 		predictor2y = np.append(predictor2y, y)
-	# 	#plt.scatter(x, y, c = 'blue', label = 'HeunEuler')
+
 	elif trackers[ii] == [3.]:
 		predictor3x = np.append(predictor3x, x)
 		predictor3y = np.append(predictor3y, y)
-	# 	#plt.scatter(x, y, c = 'green', label = 'RK4')
+
 	elif trackers[ii] == [7.]:
 		predictor4x = np.append(predictor4x, x)
 		predictor4y = np.append(predictor4y, y)
-	# 	#plt.scatter(x, y, c = 'cyan', label = 'RKCashKarp45')
+
 	elif trackers[ii] == [8.]:
 		predictor5x = np.append(predictor5x, x)
 		predictor5y = np.append(predictor5y, y)
-	# 	#plt.scatter(x, y, c = 'magenta', label = 'RKDormandPrince56')
+
 	elif trackers[ii] == [6.]:
 		predictor6x = np.append(predictor6x, x)
 		predictor6y = np.append(predictor6y, y)
-	# 	#plt.scatter(x, y, c = 'yellow', label = 'RKF45')
+
 	elif trackers[ii] == [9.]:
 		predictor7x = np.append(predictor7x, x)
 		predictor7y = np.append(predictor7y, y)
-		#plt.scatter(x, y, c = 'black', label = 'RKVerner67')
 
 
 #plot the data, predictor by predictor
-	# print(predictor1x)
-	#print(predictor1y)
 
-plt.plot(predictor1x, predictor1y, linestyle = '--', linewidth = 3, color = 'red', label = 'Euler')
-plt.plot(predictor2x, predictor2y, linestyle = '--', linewidth = 3, color = 'blue', label = 'HeunEuler')
-plt.plot(predictor3x, predictor3y, linestyle = '--', linewidth = 3, color = 'green', label = 'RK4')
-plt.plot(predictor4x, predictor4y, linestyle = '--', linewidth = 3, color = 'cyan', label = 'RKCashKarp45')
-plt.plot(predictor5x, predictor5y, linestyle = '--', linewidth = 3, color = 'magenta', label = 'RKDormandPrince56')
-plt.plot(predictor6x, predictor6y, linestyle = '--', linewidth = 3, color = 'yellow', label = 'RKF45')
-plt.plot(predictor7x, predictor7y, linestyle = '--', linewidth = 3, color = 'black', label = 'RKVerner67')
-
+plt.plot(predictor1x, predictor1y, linestyle = '-', linewidth = 2, color =  '#FF007F', label = 'Euler')
+plt.plot(predictor2x, predictor2y, linestyle = '--', linewidth = 2, color = '#F49609', label = 'HeunEuler')
+plt.plot(predictor3x, predictor3y, linestyle = '-.', linewidth = 2, color = '#84C318', label = 'RK4')
+plt.plot(predictor4x, predictor4y, linestyle = ':', linewidth = 2, color = '#301EED', label = 'RKCashKarp45')
+plt.plot(predictor5x, predictor5y, linestyle = '--', dashes = (5, 2, 20, 2), linewidth = 2, color = '#08A045', label = 'RKDormandPrince56')
+plt.plot(predictor6x, predictor6y, linestyle = '--', dashes = (2, 5), linewidth = 2, color = '#7F0799', label = 'RKF45')
+plt.plot(predictor7x, predictor7y, linestyle = '--', dashes = (5, 2), linewidth = 2, color = 'blue', label = 'RKVerner67')
+plt.scatter(fails_x, fails_y, marker = 'o', color = 'red', label = 'Failure occured')
 
 
-plt.legend(loc = 'upper right')
-fig.suptitle("Plot of Tracking Paths")
-plt.xlabel('log(tracking tolerance)')
-plt.ylabel('log(time to execute)')
-plt.style.use("seaborn-darkgrid")
+plt.legend(loc = 'best', prop={'size': 'x-small'})
+fig.suptitle("Predictor and Tracking Tolerance Performance")
+plt.xlabel('-log(tracking tolerance)')
+if (print_logs_times):
+	plt.ylabel('log(time to execute)')
+else:
+	plt.ylabel('time to execute')
 plt.show()
 #fig.savefig('test.png')

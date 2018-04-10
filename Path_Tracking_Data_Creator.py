@@ -6,61 +6,65 @@ import sys
 import time
 
 def main(n):
-<<<<<<< HEAD
-	tols = 10 ** (np.linspace(-2, -10, n))
-	import pybertini.tracking as tr
-	P = tr.Predictor
-	# preds = [p for p in pybertini.tracking.Predictor]
-	# took the Heun and P.RKNorsett34 predictors out
-	# omit Constant because it is slow
-	preds = [P.Euler, P.HeunEuler, P.RK4, P.RKCashKarp45, P.RKDormandPrince56, P.RKF45, P.RKVerner67]
-	data_set = create_data(tols, preds)
-	pickle.dump(data_set, open('data_set.p','wb'))
-
-=======
-    tols = 10 ** (np.linspace(-2, -10, n))
+    tols = 10 ** (np.linspace(0, -10, n))
     import pybertini.tracking as tr
     P = tr.Predictor
     # preds = [p for p in pybertini.tracking.Predictor]
     # took the Heun and P.RKNorsett34 predictors out
     # omit constant because it is slow
-    preds = [P.Euler, P.HeunEuler, P.RK4, P.RKCashKarp45, 
-            P.RKDormandPrince56, P.RKF45, P.RKVerner67]
+    preds = [P.Euler, P.HeunEuler, P.RK4, P.RKCashKarp45, P.RKDormandPrince56, P.RKF45, P.RKVerner67]
     data_set = create_data(tols, preds)
-    pickle.dump(data_set, open('data_set.p','wb'))
+    pickle.dump(data_set, open('data_set_10.p','wb'))
 
-# Creates the data
-# data is formatted as a tuple with 
-# the tracking tolerance, predictor, runtime, and success code
->>>>>>> 9c3b93bcd107d6976b325a3e9961c6529d473c09
 def create_data(tracking_tolerances, predictors):
-    array_of_data_sets = np.ndarray(len(tracking_tolerances) * len(predictors), dtype=np.object)
-    i = 0
 
-<<<<<<< HEAD
-	array_of_data_sets = np.ndarray(len(tracking_tolerances) * len(predictors), dtype=np.object)
-	i = 0
-	for t in tracking_tolerances:
-		for p in predictors:
-			print('{} {}'.format(t, p))
-			#str(t) use this if tk load fails
-			runtime, successcode = compute_values(t, p)
-			array_of_data_sets[i] = (t, p, runtime, successcode)
-			i += 1
-=======
+    array_of_data_sets = np.ndarray(len(tracking_tolerances) * len(predictors), dtype=np.object)
+    tr, td, hom = make_system()
+    i = 0
     for t in tracking_tolerances:
         for p in predictors:
-            print('{} {}'.format(t, p))
-            runtime, successcode = compute_values(t, p)
+            #print('{} {}'.format(t, p))
+            runtime, successcode = compute_values(t, p, tr, td)
+            #str(t) use this if tk load fails
             array_of_data_sets[i] = (t, p, runtime, successcode)
             i += 1
->>>>>>> 9c3b93bcd107d6976b325a3e9961c6529d473c09
 
     return array_of_data_sets
 
-# Creates our system and then times how long
-# it takes to run given the tracking tolerance and predictor
-def compute_values(tol, pred):
+def compute_values(tol, pred, tr, td):
+
+    tr.tracking_tolerance(tol)
+    tr.predictor(pred)
+
+    start_time = pybertini.multiprec.Complex("1")
+    eg_boundary = pybertini.multiprec.Complex("0.1")
+
+    midpath_points = [None]*td.num_start_points()
+    overall_code = pybertini.tracking.SuccessCode.Success
+    speed_start = time.time()
+
+    target_tol_multiplier = 10
+    same_point_tol = target_tol_multiplier * tol
+
+    for ii in range(td.num_start_points()):
+        #print("Tracking path {}...".format(ii))
+        midpath_points[ii] = pybertini.multiprec.Vector()
+        code = tr.track_path(result=midpath_points[ii], start_time=start_time, end_time=eg_boundary, start_point=td.start_point_mp(ii))
+        if code != pybertini.tracking.SuccessCode.Success:
+            overall_code = pybertini.tracking.SuccessCode.Failure
+
+    from pybertini.multiprec import abs
+    for ii in range(td.num_start_points()):
+        for jj in range(ii + 1, td.num_start_points()):
+            if abs((midpath_points[ii] - midpath_points[jj]).norm()) < same_point_tol:
+                overall_code = pybertini.tracking.SuccessCode.Failure
+                #print("encountered a path crossing")
+
+
+
+    return time.time() - speed_start, overall_code
+
+def make_system():
 
     gw = pybertini.System()
 
@@ -82,29 +86,11 @@ def compute_values(tol, pred):
     hom.add_path_variable(t)
 
     tr = pybertini.tracking.AMPTracker(hom)
-    tr.tracking_tolerance(tol)
-    tr.predictor(pred)
 
-    start_time = pybertini.multiprec.Complex("1")
-    eg_boundary = pybertini.multiprec.Complex("0.1")
+#print hom and send danielle the output
 
-    midpath_points = [None]*td.num_start_points()
-    overall_code = pybertini.tracking.SuccessCode.Success
-    speed_start = time.time()
-
-    for ii in range(td.num_start_points()):
-        print("Tracking path {}...".format(ii))
-        midpath_points[ii] = pybertini.multiprec.Vector()
-
-        code = tr.track_path(
-                result=midpath_points[ii], start_time=start_time, 
-                end_time=eg_boundary, 
-                start_point=td.start_point_mp(ii))
-
-        if code != pybertini.tracking.SuccessCode.Success:
-            overall_code = pybertini.tracking.SuccessCode.Failure
-
-    return time.time() - speed_start, overall_code
+    print(hom)
+    return tr, td, hom
 
 if __name__ == '__main__':
-    main(3)
+    main(10)
